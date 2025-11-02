@@ -1,0 +1,58 @@
+package main
+
+import (
+	"fmt"
+	"os"
+
+	"github.com/amoilanen/advent-of-code-2024/internal/days/day01"
+	"github.com/amoilanen/advent-of-code-2024/internal/days/day02"
+)
+
+func main() {
+	if len(os.Args) > 1 {
+		runSpecificDay(os.Args[1])
+	} else {
+		runAllDays()
+	}
+}
+
+func runAllDays() {
+	fmt.Println("Advent of Code 2024 - Solutions")
+	fmt.Println("================================")
+	fmt.Println()
+
+	runDay01()
+	runDay02()
+}
+
+func runSpecificDay(day string) {
+	switch day {
+	case "1", "day01", "day1":
+		runDay01()
+	case "2", "day02", "day2":
+		runDay02()
+	default:
+		fmt.Fprintf(os.Stderr, "Unknown day: %s\n", day)
+		fmt.Fprintln(os.Stderr, "Usage: aoc2024 [day]")
+		fmt.Fprintln(os.Stderr, "Example: aoc2024 1")
+		os.Exit(1)
+	}
+}
+
+func runDay01() {
+	fmt.Println("Day 1:")
+	input := day01.DayInput
+	parsed := day01.Parse(input)
+	fmt.Printf("  Part 1: %d\n", day01.Part1(parsed))
+	fmt.Printf("  Part 2: %d\n", day01.Part2(parsed))
+	fmt.Println()
+}
+
+func runDay02() {
+	fmt.Println("Day 2:")
+	input := day02.DayInput
+	parsed := day02.Parse(input)
+	fmt.Printf("  Part 1: %d\n", day02.Part1(parsed))
+	fmt.Printf("  Part 2: %d\n", day02.Part2(parsed))
+	fmt.Println()
+}
