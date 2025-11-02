@@ -36,22 +36,29 @@ func Parse(input string) []Report {
 // isSafe checks if a report is safe according to the rules:
 // - All levels must be either increasing or decreasing
 // - Any two adjacent levels must differ by at least 1 and at most 3
-func isSafe(report Report) bool {
-	if len(report) < 2 {
+// skipIndices: indices to skip when checking (for Problem Dampener); pass empty slice or nil for no skipping
+func isSafe(report Report, skipIndices []int) bool {
+	// Build list of valid indices (excluding skipIndices)
+	validIndices := buildValidIndices(report, skipIndices)
+
+	if len(validIndices) < 2 {
 		return true
 	}
 
-	// Determine if we should be increasing or decreasing based on first pair
-	firstDiff := report[1] - report[0]
+	// Determine if we should be increasing or decreasing based on first valid pair
+	firstDiff := report[validIndices[1]] - report[validIndices[0]]
 	if firstDiff == 0 {
 		return false // No change is not allowed
 	}
 
 	isIncreasing := firstDiff > 0
 
-	// Check all adjacent pairs
-	for i := 0; i < len(report)-1; i++ {
-		diff := report[i+1] - report[i]
+	// Check all adjacent pairs of valid indices
+	for i := 0; i < len(validIndices)-1; i++ {
+		curr := validIndices[i]
+		next := validIndices[i+1]
+
+		diff := report[next] - report[curr]
 		absDiff := utils.Abs(diff)
 
 		// Check if difference is within range [1, 3]
@@ -71,11 +78,70 @@ func isSafe(report Report) bool {
 	return true
 }
 
+// buildValidIndices creates a list of valid indices, excluding those in skipIndices
+// Optimized for the common case where skipIndices is empty
+func buildValidIndices(report Report, skipIndices []int) []int {
+	// Optimize for the common case: no skipping
+	if len(skipIndices) == 0 {
+		// Create a simple sequential list
+		validIndices := make([]int, len(report))
+		for i := range report {
+			validIndices[i] = i
+		}
+		return validIndices
+	}
+
+	// Build a map of indices to skip for O(1) lookup
+	skipMap := make(map[int]bool, len(skipIndices))
+	for _, idx := range skipIndices {
+		skipMap[idx] = true
+	}
+
+	// Build list of valid indices (excluding skipIndices)
+	validIndices := make([]int, 0, len(report)-len(skipIndices))
+	for i := 0; i < len(report); i++ {
+		if !skipMap[i] {
+			validIndices = append(validIndices, i)
+		}
+	}
+
+	return validIndices
+}
+
+// isSafeWithDampener checks if a report is safe, either as-is or by removing a single level
+func isSafeWithDampener(report Report) bool {
+	// First check if it's already safe (no skipping)
+	if isSafe(report, nil) {
+		return true
+	}
+
+	// Try skipping each level one at a time
+	for i := 0; i < len(report); i++ {
+		if isSafe(report, []int{i}) {
+			return true
+		}
+	}
+
+	return false
+}
+
 // Part1 counts how many reports are safe
 func Part1(reports []Report) int {
 	safeCount := 0
 	for _, report := range reports {
-		if isSafe(report) {
+		if isSafe(report, nil) {
+			safeCount++
+		}
+	}
+	return safeCount
+}
+
+// Part2 counts how many reports are safe with the Problem Dampener
+// The Problem Dampener allows removing a single level to make an unsafe report safe
+func Part2(reports []Report) int {
+	safeCount := 0
+	for _, report := range reports {
+		if isSafeWithDampener(report) {
 			safeCount++
 		}
 	}

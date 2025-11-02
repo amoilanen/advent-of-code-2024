@@ -128,76 +128,82 @@ func TestIsSafe(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := isSafe(tt.report)
+			got := isSafe(tt.report, nil)
 			if got != tt.want {
-				t.Errorf("isSafe(%v) = %v, want %v; reason: %s", tt.report, got, tt.want, tt.reason)
+				t.Errorf("isSafe(%v, nil) = %v, want %v; reason: %s", tt.report, got, tt.want, tt.reason)
 			}
 		})
 	}
 }
 
-func TestPart1(t *testing.T) {
+func TestIsSafeWithDampener(t *testing.T) {
 	tests := []struct {
-		name    string
-		reports []Report
-		want    int
+		name   string
+		report Report
+		want   bool
+		reason string
 	}{
 		{
-			name: "example from problem description",
-			reports: []Report{
-				{7, 6, 4, 2, 1}, // safe
-				{1, 2, 7, 8, 9}, // unsafe
-				{9, 7, 6, 2, 1}, // unsafe
-				{1, 3, 2, 4, 5}, // unsafe
-				{8, 6, 4, 4, 1}, // unsafe
-				{1, 3, 6, 7, 9}, // safe
-			},
-			want: 2,
+			name:   "safe without removing any level",
+			report: Report{7, 6, 4, 2, 1},
+			want:   true,
+			reason: "already safe decreasing",
 		},
 		{
-			name:    "no reports",
-			reports: []Report{},
-			want:    0,
+			name:   "unsafe regardless of which level is removed",
+			report: Report{1, 2, 7, 8, 9},
+			want:   false,
+			reason: "2 to 7 jump too large, can't fix by removing one level",
 		},
 		{
-			name: "all safe",
-			reports: []Report{
-				{1, 2, 3, 4, 5},
-				{10, 8, 6, 4, 2},
-				{1, 3, 6, 7, 9},
-			},
-			want: 3,
+			name:   "unsafe regardless of which level is removed",
+			report: Report{9, 7, 6, 2, 1},
+			want:   false,
+			reason: "6 to 2 jump too large, can't fix by removing one level",
 		},
 		{
-			name: "all unsafe",
-			reports: []Report{
-				{1, 2, 7, 8, 9},
-				{9, 7, 6, 2, 1},
-				{8, 6, 4, 4, 1},
-			},
-			want: 0,
+			name:   "safe by removing the second level (3)",
+			report: Report{1, 3, 2, 4, 5},
+			want:   true,
+			reason: "removing 3 gives [1, 2, 4, 5] which is all increasing",
 		},
 		{
-			name: "single report safe",
-			reports: []Report{
-				{1, 2, 3},
-			},
-			want: 1,
+			name:   "safe by removing the third level (4)",
+			report: Report{8, 6, 4, 4, 1},
+			want:   true,
+			reason: "removing duplicate 4 gives [8, 6, 4, 1] which is all decreasing",
 		},
 		{
-			name: "single report unsafe",
-			reports: []Report{
-				{1, 1, 1},
-			},
-			want: 0,
+			name:   "safe without removing any level",
+			report: Report{1, 3, 6, 7, 9},
+			want:   true,
+			reason: "already safe increasing",
+		},
+		{
+			name:   "safe by removing outlier at start",
+			report: Report{10, 1, 2, 3, 4},
+			want:   true,
+			reason: "removing 10 gives [1, 2, 3, 4] which is all increasing",
+		},
+		{
+			name:   "safe by removing outlier at end",
+			report: Report{1, 2, 3, 4, 10},
+			want:   true,
+			reason: "removing 10 gives [1, 2, 3, 4] which is all increasing",
+		},
+		{
+			name:   "safe by removing first level to fix direction",
+			report: Report{1, 5, 4, 3, 2},
+			want:   true,
+			reason: "removing 1 gives [5, 4, 3, 2] which is all decreasing by 1",
 		},
 	}
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := Part1(tt.reports)
+			got := isSafeWithDampener(tt.report)
 			if got != tt.want {
-				t.Errorf("Part1() = %v, want %v", got, tt.want)
+				t.Errorf("isSafeWithDampener(%v) = %v, want %v; reason: %s", tt.report, got, tt.want, tt.reason)
 			}
 		})
 	}
@@ -213,6 +219,14 @@ func TestWithExampleInput(t *testing.T) {
 			t.Errorf("Part1() = %v, want %v", got, want)
 		}
 	})
+
+	t.Run("Part2 with example input", func(t *testing.T) {
+		want := 4
+		got := Part2(parsed)
+		if got != want {
+			t.Errorf("Part2() = %v, want %v", got, want)
+		}
+	})
 }
 
 // BenchmarkPart1 benchmarks the Part1 solution
@@ -221,5 +235,14 @@ func BenchmarkPart1(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		Part1(parsed)
+	}
+}
+
+// BenchmarkPart2 benchmarks the Part2 solution
+func BenchmarkPart2(b *testing.B) {
+	parsed := Parse(ExampleInput)
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		Part2(parsed)
 	}
 }
