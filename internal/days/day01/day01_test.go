@@ -107,6 +107,79 @@ func TestPart1(t *testing.T) {
 	}
 }
 
+func TestPart2(t *testing.T) {
+	tests := []struct {
+		name  string
+		lists LocationLists
+		want  int
+	}{
+		{
+			name: "example from problem description",
+			lists: LocationLists{
+				Left:  []int{3, 4, 2, 1, 3, 3},
+				Right: []int{4, 3, 5, 3, 9, 3},
+			},
+			want: 31, // 3*3 + 4*1 + 2*0 + 1*0 + 3*3 + 3*3 = 9 + 4 + 0 + 0 + 9 + 9 = 31
+		},
+		{
+			name: "no matches",
+			lists: LocationLists{
+				Left:  []int{1, 2, 3},
+				Right: []int{4, 5, 6},
+			},
+			want: 0,
+		},
+		{
+			name: "all matches once",
+			lists: LocationLists{
+				Left:  []int{1, 2, 3},
+				Right: []int{1, 2, 3},
+			},
+			want: 6, // 1*1 + 2*1 + 3*1 = 6
+		},
+		{
+			name: "single number multiple times",
+			lists: LocationLists{
+				Left:  []int{5, 5, 5},
+				Right: []int{5, 5},
+			},
+			want: 30, // 5*2 + 5*2 + 5*2 = 10 + 10 + 10 = 30
+		},
+		{
+			name: "empty lists",
+			lists: LocationLists{
+				Left:  []int{},
+				Right: []int{},
+			},
+			want: 0,
+		},
+		{
+			name: "left empty, right has values",
+			lists: LocationLists{
+				Left:  []int{},
+				Right: []int{1, 2, 3},
+			},
+			want: 0,
+		},
+		{
+			name: "left has values, right empty",
+			lists: LocationLists{
+				Left:  []int{1, 2, 3},
+				Right: []int{},
+			},
+			want: 0,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Part2(tt.lists); got != tt.want {
+				t.Errorf("Part2() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestWithExampleInput(t *testing.T) {
 	parsed := Parse(ExampleInput)
 
@@ -118,8 +191,7 @@ func TestWithExampleInput(t *testing.T) {
 	})
 
 	t.Run("Part2 with example input", func(t *testing.T) {
-		// Part 2 not yet implemented
-		want := 0
+		want := 31
 		if got := Part2(parsed); got != want {
 			t.Errorf("Part2() = %v, want %v", got, want)
 		}

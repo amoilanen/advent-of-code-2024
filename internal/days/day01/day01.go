@@ -67,9 +67,22 @@ func Part1(lists LocationLists) int {
 	return totalDistance
 }
 
-// Part2 solves part 2 of the day's problem
-// (Placeholder until part 2 is revealed)
+// Part2 calculates the similarity score between the two lists
+// For each number in the left list, multiply it by the number of times
+// it appears in the right list, then sum all products
 func Part2(lists LocationLists) int {
-	// Part 2 will be implemented once the problem is revealed
-	return 0
+	// Build frequency map of right list
+	rightFreq := make(map[int]int)
+	for _, num := range lists.Right {
+		rightFreq[num]++
+	}
+
+	// Calculate similarity score
+	similarityScore := 0
+	for _, num := range lists.Left {
+		count := rightFreq[num]
+		similarityScore += num * count
+	}
+
+	return similarityScore
 }
