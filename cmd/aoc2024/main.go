@@ -64,7 +64,8 @@ func runDay02() {
 func runDay03() {
 	fmt.Println("Day 3:")
 	input := day03.DayInput
-	parsed := day03.Parse(input)
-	fmt.Printf("  Part 1: %d\n", day03.Part1(parsed))
+	instructions := day03.Parse(input)
+	fmt.Printf("  Part 1: %d\n", day03.Part1(instructions))
+	fmt.Printf("  Part 2: %d\n", day03.Part2(instructions))
 	fmt.Println()
 }
