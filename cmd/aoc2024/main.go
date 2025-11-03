@@ -7,6 +7,7 @@ import (
 	"github.com/amoilanen/advent-of-code-2024/internal/days/day01"
 	"github.com/amoilanen/advent-of-code-2024/internal/days/day02"
 	"github.com/amoilanen/advent-of-code-2024/internal/days/day03"
+	"github.com/amoilanen/advent-of-code-2024/internal/days/day04"
 )
 
 func main() {
@@ -25,6 +26,7 @@ func runAllDays() {
 	runDay01()
 	runDay02()
 	runDay03()
+	runDay04()
 }
 
 func runSpecificDay(day string) {
@@ -35,6 +37,8 @@ func runSpecificDay(day string) {
 		runDay02()
 	case "3", "day03", "day3":
 		runDay03()
+	case "4", "day04", "day4":
+		runDay04()
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown day: %s\n", day)
 		fmt.Fprintln(os.Stderr, "Usage: aoc2024 [day]")
@@ -67,5 +71,14 @@ func runDay03() {
 	instructions := day03.Parse(input)
 	fmt.Printf("  Part 1: %d\n", day03.Part1(instructions))
 	fmt.Printf("  Part 2: %d\n", day03.Part2(instructions))
+	fmt.Println()
+}
+
+func runDay04() {
+	fmt.Println("Day 4:")
+	input := day04.DayInput
+	grid := day04.Parse(input)
+	fmt.Printf("  Part 1: %d\n", day04.Part1(grid))
+	fmt.Printf("  Part 2: %d\n", day04.Part2(grid))
 	fmt.Println()
 }
