@@ -26,6 +26,30 @@ func Parse(input string) Grid {
 	return grid
 }
 
+// dimensions returns the number of rows and columns in the grid
+func (g Grid) dimensions() (rows, cols int) {
+	rows = len(g)
+	if rows == 0 {
+		return 0, 0
+	}
+	cols = len(g[0])
+	return rows, cols
+}
+
+// isInBounds checks if the given position is within the grid bounds
+func (g Grid) isInBounds(row, col int) bool {
+	rows, cols := g.dimensions()
+	return row >= 0 && row < rows && col >= 0 && col < cols
+}
+
+// at safely gets the character at the given position
+func (g Grid) at(row, col int) rune {
+	if !g.isInBounds(row, col) {
+		return 0
+	}
+	return g[row][col]
+}
+
 // Direction represents a search direction (row delta, col delta)
 type Direction struct {
 	dr, dc int
@@ -44,44 +68,40 @@ var directions = []Direction{
 }
 
 // hasWordAtPositionDirection checks if a word exists starting from (row, col) in a given direction
-func (g Grid) hasWordAtPositionDirection(row int, col int, dir Direction, word string) bool {
-	rows := len(g)
-	if rows == 0 {
-		return false
-	}
-	cols := len(g[0])
-
+func (g Grid) hasWordAtPositionDirection(row, col int, dir Direction, word string) bool {
 	for i, char := range word {
-		newRow := row + i*dir.dr
-		newCol := col + i*dir.dc
+		checkRow := row + i*dir.dr
+		checkCol := col + i*dir.dc
 
-		// Check bounds
-		if newRow < 0 || newRow >= rows || newCol < 0 || newCol >= cols {
-			return false
-		}
-
-		// Check if character matches
-		if g[newRow][newCol] != char {
+		if g.at(checkRow, checkCol) != char {
 			return false
 		}
 	}
-
 	return true
 }
 
-// countWordOccurrences counts all occurrences of a word in the grid
-func (g Grid) countWordOccurrences(word string) int {
+// countMatches counts positions in the grid where the predicate returns true
+func (g Grid) countMatches(predicate func(row, col int) bool) int {
 	count := 0
-	rows := len(g)
-	if rows == 0 {
-		return 0
-	}
-	cols := len(g[0])
+	rows, cols := g.dimensions()
 
-	// Try starting from each position
 	for row := 0; row < rows; row++ {
 		for col := 0; col < cols; col++ {
-			// Try each direction
+			if predicate(row, col) {
+				count++
+			}
+		}
+	}
+	return count
+}
+
+// countWordOccurrences counts all occurrences of a word in the grid in all directions
+func (g Grid) countWordOccurrences(word string) int {
+	count := 0
+	rows, cols := g.dimensions()
+
+	for row := 0; row < rows; row++ {
+		for col := 0; col < cols; col++ {
 			for _, dir := range directions {
 				if g.hasWordAtPositionDirection(row, col, dir, word) {
 					count++
@@ -89,7 +109,6 @@ func (g Grid) countWordOccurrences(word string) int {
 			}
 		}
 	}
-
 	return count
 }
 
@@ -98,8 +117,33 @@ func Part1(grid Grid) int {
 	return grid.countWordOccurrences("XMAS")
 }
 
-// Part2 placeholder for part 2
+// isDiagonalMAS checks if two positions form a valid MAS diagonal (can be forward or backward)
+func isDiagonalMAS(char1, char2 rune) bool {
+	return (char1 == 'M' && char2 == 'S') || (char1 == 'S' && char2 == 'M')
+}
+
+// isXMAS checks if position (row, col) is the center 'A' of an X-MAS pattern
+// An X-MAS is two "MAS" forming an X shape, where each MAS can be forward or backward
+func (g Grid) isXMAS(row, col int) bool {
+	// Check if center is 'A'
+	if g.at(row, col) != 'A' {
+		return false
+	}
+
+	// Get the 4 corners (at() returns 0 for out-of-bounds, which won't match M or S)
+	topLeft := g.at(row-1, col-1)
+	topRight := g.at(row-1, col+1)
+	bottomLeft := g.at(row+1, col-1)
+	bottomRight := g.at(row+1, col+1)
+
+	// Both diagonals must form MAS (forward or backward)
+	diag1Valid := isDiagonalMAS(topLeft, bottomRight)
+	diag2Valid := isDiagonalMAS(topRight, bottomLeft)
+
+	return diag1Valid && diag2Valid
+}
+
+// Part2 counts how many X-MAS patterns appear (two MAS in X shape)
 func Part2(grid Grid) int {
-	// TODO: Implement Part 2 when we get the problem description
-	return 0
+	return grid.countMatches(grid.isXMAS)
 }

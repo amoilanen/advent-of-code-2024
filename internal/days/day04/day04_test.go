@@ -11,6 +11,15 @@ func TestPart1Example(t *testing.T) {
 	}
 }
 
+func TestPart2Example(t *testing.T) {
+	grid := Parse(ExampleInput)
+	result := Part2(grid)
+	expected := 9
+	if result != expected {
+		t.Errorf("Part2(ExampleInput) = %d; want %d", result, expected)
+	}
+}
+
 func TestParse(t *testing.T) {
 	grid := Parse(ExampleInput)
 	if len(grid) != 10 {
