@@ -11,6 +11,15 @@ func TestPart1Example(t *testing.T) {
 	}
 }
 
+func TestPart2Example(t *testing.T) {
+	input := Parse(ExampleInput)
+	result := Part2(input)
+	expected := 123
+	if result != expected {
+		t.Errorf("Part2(ExampleInput) = %d; want %d", result, expected)
+	}
+}
+
 func TestParse(t *testing.T) {
 	input := Parse(ExampleInput)
 
@@ -76,6 +85,48 @@ func TestMiddlePage(t *testing.T) {
 			result := tt.update.middlePage()
 			if result != tt.expected {
 				t.Errorf("middlePage(%v) = %d; want %d", tt.update, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestReorder(t *testing.T) {
+	input := Parse(ExampleInput)
+
+	tests := []struct {
+		name     string
+		original Update
+		expected Update
+	}{
+		{
+			name:     "Fourth update (75,97,47,61,53)",
+			original: Update{75, 97, 47, 61, 53},
+			expected: Update{97, 75, 47, 61, 53},
+		},
+		{
+			name:     "Fifth update (61,13,29)",
+			original: Update{61, 13, 29},
+			expected: Update{61, 29, 13},
+		},
+		{
+			name:     "Sixth update (97,13,75,29,47)",
+			original: Update{97, 13, 75, 29, 47},
+			expected: Update{97, 75, 47, 29, 13},
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := tt.original.reorder(input.RuleSet)
+			if len(result) != len(tt.expected) {
+				t.Errorf("reorder(%v) length = %d; want %d", tt.original, len(result), len(tt.expected))
+				return
+			}
+			for i := range result {
+				if result[i] != tt.expected[i] {
+					t.Errorf("reorder(%v) = %v; want %v", tt.original, result, tt.expected)
+					break
+				}
 			}
 		})
 	}

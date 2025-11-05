@@ -149,6 +149,37 @@ func (u Update) middlePage() int {
 	return u[len(u)/2]
 }
 
+// reorder sorts the update pages according to the ordering rules
+// Uses a comparison function based on the RuleSet
+func (u Update) reorder(ruleSet *RuleSet) Update {
+	// Create a copy to avoid modifying the original
+	reordered := make(Update, len(u))
+	copy(reordered, u)
+
+	// Sort based on ordering rules
+	// We use a simple bubble sort to ensure stability and correctness
+	// For each pair of adjacent elements, check if they violate any rule
+	changed := true
+	for changed {
+		changed = false
+		for i := 0; i < len(reordered)-1; i++ {
+			pageI := reordered[i]
+			pageJ := reordered[i+1]
+
+			// Check if pageI must come after pageJ (wrong order)
+			if mustFollowJ, exists := ruleSet.mustComeAfter[pageJ]; exists {
+				if _, shouldFollow := mustFollowJ[pageI]; shouldFollow {
+					// Swap them
+					reordered[i], reordered[i+1] = reordered[i+1], reordered[i]
+					changed = true
+				}
+			}
+		}
+	}
+
+	return reordered
+}
+
 // Part1 finds the sum of middle page numbers from correctly-ordered updates
 func Part1(input Input) int {
 	sum := 0
@@ -162,7 +193,17 @@ func Part1(input Input) int {
 	return sum
 }
 
-// Part2 placeholder for part 2
+// Part2 finds the sum of middle page numbers after reordering incorrectly-ordered updates
 func Part2(input Input) int {
-	return 0
+	sum := 0
+
+	for _, update := range input.Updates {
+		if !update.isValid(input.RuleSet) {
+			// Update is incorrect, reorder it
+			corrected := update.reorder(input.RuleSet)
+			sum += corrected.middlePage()
+		}
+	}
+
+	return sum
 }
