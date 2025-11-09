@@ -21,6 +21,7 @@ type Operator int
 const (
 	Add Operator = iota
 	Multiply
+	Concatenate
 )
 
 // Equation represents a calibration equation
@@ -81,14 +82,17 @@ func evaluate(numbers []int, operators []Operator) int {
 			result += numbers[i+1]
 		case Multiply:
 			result *= numbers[i+1]
+		case Concatenate:
+			concatenated := strconv.Itoa(result) + strconv.Itoa(numbers[i+1])
+			result, _ = strconv.Atoi(concatenated)
 		}
 	}
 
 	return result
 }
 
-// canBeMadeTrue checks if the equation can be made true with any combination of operators
-func canBeMadeTrue(eq Equation) bool {
+// canBeMadeTrueWithOperators checks if equation can be made true using given operators
+func canBeMadeTrueWithOperators(eq Equation, allowedOperators []Operator) bool {
 	if len(eq.Numbers) == 0 {
 		return false
 	}
@@ -99,16 +103,22 @@ func canBeMadeTrue(eq Equation) bool {
 
 	// Number of operator positions
 	numOps := len(eq.Numbers) - 1
+	numOperatorTypes := len(allowedOperators)
 
-	// Try all combinations of operators (2^numOps combinations)
-	for mask := 0; mask < (1 << numOps); mask++ {
+	// Calculate total combinations: numOperatorTypes^numOps (exponentiation)
+	totalCombinations := 1
+	for i := 0; i < numOps; i++ {
+		totalCombinations *= numOperatorTypes
+	}
+
+	// Try all combinations using base-n representation
+	for combo := 0; combo < totalCombinations; combo++ {
 		operators := make([]Operator, numOps)
+		temp := combo
 		for i := 0; i < numOps; i++ {
-			if (mask & (1 << i)) != 0 {
-				operators[i] = Multiply
-			} else {
-				operators[i] = Add
-			}
+			operatorIndex := temp % numOperatorTypes
+			operators[i] = allowedOperators[operatorIndex]
+			temp /= numOperatorTypes
 		}
 
 		if evaluate(eq.Numbers, operators) == eq.TestValue {
@@ -119,11 +129,32 @@ func canBeMadeTrue(eq Equation) bool {
 	return false
 }
 
+// canBeMadeTrue checks if the equation can be made true with Add and Multiply operators
+func canBeMadeTrue(eq Equation) bool {
+	return canBeMadeTrueWithOperators(eq, []Operator{Add, Multiply})
+}
+
+// canBeMadeTrueWithConcat checks if the equation can be made true with Add, Multiply, and Concatenate
+func canBeMadeTrueWithConcat(eq Equation) bool {
+	return canBeMadeTrueWithOperators(eq, []Operator{Add, Multiply, Concatenate})
+}
+
 // Part1 calculates the sum of test values from equations that can be made true
 func Part1(equations []Equation) int {
 	sum := 0
 	for _, eq := range equations {
 		if canBeMadeTrue(eq) {
+			sum += eq.TestValue
+		}
+	}
+	return sum
+}
+
+// Part2 calculates the sum using Add, Multiply, and Concatenate operators
+func Part2(equations []Equation) int {
+	sum := 0
+	for _, eq := range equations {
+		if canBeMadeTrueWithConcat(eq) {
 			sum += eq.TestValue
 		}
 	}

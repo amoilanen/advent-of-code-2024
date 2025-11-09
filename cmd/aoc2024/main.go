@@ -118,5 +118,6 @@ func runDay07() {
 	input := day07.DayInput
 	equations := day07.Parse(input)
 	fmt.Printf("  Part 1: %d\n", day07.Part1(equations))
+	fmt.Printf("  Part 2: %d\n", day07.Part2(equations))
 	fmt.Println()
 }

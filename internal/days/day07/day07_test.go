@@ -106,3 +106,87 @@ func TestCanBeMadeTrue(t *testing.T) {
 		})
 	}
 }
+
+func TestConcatenation(t *testing.T) {
+	tests := []struct {
+		name      string
+		numbers   []int
+		operators []Operator
+		expected  int
+	}{
+		{
+			name:      "15 || 6",
+			numbers:   []int{15, 6},
+			operators: []Operator{Concatenate},
+			expected:  156,
+		},
+		{
+			name:      "6 * 8 || 6 * 15",
+			numbers:   []int{6, 8, 6, 15},
+			operators: []Operator{Multiply, Concatenate, Multiply},
+			expected:  7290,
+		},
+		{
+			name:      "17 || 8 + 14",
+			numbers:   []int{17, 8, 14},
+			operators: []Operator{Concatenate, Add},
+			expected:  192,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := evaluate(tt.numbers, tt.operators)
+			if result != tt.expected {
+				t.Errorf("evaluate(%v, %v) = %d; want %d", tt.numbers, tt.operators, result, tt.expected)
+			}
+		})
+	}
+}
+
+func TestPart2Example(t *testing.T) {
+	equations := Parse(ExampleInput)
+	result := Part2(equations)
+	expected := 11387
+	if result != expected {
+		t.Errorf("Part2(ExampleInput) = %d; want %d", result, expected)
+	}
+}
+
+func TestCanBeMadeTrueWithConcat(t *testing.T) {
+	tests := []struct {
+		name     string
+		equation Equation
+		expected bool
+	}{
+		{
+			name:     "156: 15 6 (can with concat)",
+			equation: Equation{TestValue: 156, Numbers: []int{15, 6}},
+			expected: true,
+		},
+		{
+			name:     "7290: 6 8 6 15 (can with concat)",
+			equation: Equation{TestValue: 7290, Numbers: []int{6, 8, 6, 15}},
+			expected: true,
+		},
+		{
+			name:     "192: 17 8 14 (can with concat)",
+			equation: Equation{TestValue: 192, Numbers: []int{17, 8, 14}},
+			expected: true,
+		},
+		{
+			name:     "83: 17 5 (still cannot)",
+			equation: Equation{TestValue: 83, Numbers: []int{17, 5}},
+			expected: false,
+		},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			result := canBeMadeTrueWithConcat(tt.equation)
+			if result != tt.expected {
+				t.Errorf("canBeMadeTrueWithConcat(%v) = %v; want %v", tt.equation, result, tt.expected)
+			}
+		})
+	}
+}
