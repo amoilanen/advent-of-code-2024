@@ -47,14 +47,12 @@ func TestPart1(t *testing.T) {
 	}
 }
 
-func TestPart1WithDayInput(t *testing.T) {
-	diskMap := Parse(DayInput)
-	result := Part1(diskMap)
-	t.Logf("Part 1 result: %d", result)
-}
-
 func TestPart2(t *testing.T) {
 	diskMap := Parse(ExampleInput)
 	result := Part2(diskMap)
-	t.Logf("Part 2 result: %d", result)
+	expected := 2858
+
+	if result != expected {
+		t.Errorf("Part2() = %d; want %d", result, expected)
+	}
 }

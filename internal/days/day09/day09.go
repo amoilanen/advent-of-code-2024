@@ -103,8 +103,121 @@ func Part1(diskMap DiskMap) int {
 	return dm.Checksum()
 }
 
-// Part2 placeholder for part 2
+// findFile locates a file by ID and returns its start position and length
+// Returns (-1, 0) if file not found
+func (dm DiskMap) findFile(fileID int) (startPos, length int) {
+	startPos = -1
+	length = 0
+
+	for i, id := range dm.Blocks {
+		if id == fileID {
+			if startPos == -1 {
+				startPos = i
+			}
+			length++
+		} else if startPos != -1 {
+			// File blocks are contiguous, so we're done
+			break
+		}
+	}
+
+	return startPos, length
+}
+
+// findFreeSpan finds the leftmost free space span that can fit targetLength blocks
+// Only searches up to maxPos (exclusive)
+// Returns the start position of the free span, or -1 if not found
+func (dm DiskMap) findFreeSpan(targetLength, maxPos int) int {
+	i := 0
+	for i < maxPos {
+		// Skip non-free blocks
+		if dm.Blocks[i] != -1 {
+			i++
+			continue
+		}
+
+		// Found start of free space, count consecutive free blocks
+		spanStart := i
+		spanLength := 0
+		for i < maxPos && dm.Blocks[i] == -1 {
+			spanLength++
+			i++
+		}
+
+		// Check if this span is large enough
+		if spanLength >= targetLength {
+			return spanStart
+		}
+	}
+
+	return -1 // No suitable span found
+}
+
+// moveFile moves a file from one position to another
+// Copies file blocks to new position and marks old position as free
+func (dm *DiskMap) moveFile(fileID, fromPos, toPos, length int) {
+	// Copy file blocks to new position
+	for i := 0; i < length; i++ {
+		dm.Blocks[toPos+i] = fileID
+	}
+
+	// Mark old position as free
+	for i := 0; i < length; i++ {
+		dm.Blocks[fromPos+i] = -1
+	}
+}
+
+// CompactWholeFiles performs whole-file defragmentation
+// Processes files in decreasing file ID order
+// Each file is moved at most once to the leftmost suitable free space
+//
+// Algorithm:
+//  1. Find maximum file ID
+//  2. For each file from max ID down to 0:
+//     a. Locate the file (start position and length)
+//     b. Find leftmost free span that can fit the file (must be to the left)
+//     c. If found, move the entire file
+//     d. If not found, file stays in place
+//
+// Time complexity: O(n² × m) worst case, where n = number of files, m = total blocks
+func (dm *DiskMap) CompactWholeFiles() {
+	// Find maximum file ID
+	maxFileID := 0
+	for _, id := range dm.Blocks {
+		if id > maxFileID {
+			maxFileID = id
+		}
+	}
+
+	// Process files in decreasing ID order
+	for fileID := maxFileID; fileID >= 0; fileID-- {
+		// Find where this file currently is
+		startPos, length := dm.findFile(fileID)
+		if startPos == -1 || length == 0 {
+			continue // File not found or empty
+		}
+
+		// Find leftmost free span that can fit this file
+		// Only search to the left of the file's current position
+		freePos := dm.findFreeSpan(length, startPos)
+		if freePos == -1 {
+			continue // No suitable free space found
+		}
+
+		// Move the file to the free space
+		dm.moveFile(fileID, startPos, freePos, length)
+	}
+}
+
+// Part2 solves part 2: compact whole files and calculate checksum
 func Part2(diskMap DiskMap) int {
-	// To be implemented
-	return 0
+	// Make a copy to avoid modifying the original
+	dm := DiskMap{Blocks: make([]int, len(diskMap.Blocks))}
+	copy(dm.Blocks, diskMap.Blocks)
+
+	// Compact using whole-file defragmentation
+	dm.CompactWholeFiles()
+
+	// Calculate and return checksum
+	return dm.Checksum()
 }
