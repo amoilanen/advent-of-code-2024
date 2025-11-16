@@ -157,5 +157,6 @@ func runDay10() {
 	input := day10.DayInput
 	topoMap := day10.Parse(input)
 	fmt.Printf("  Part 1: %d\n", day10.Part1(topoMap))
+	fmt.Printf("  Part 2: %d\n", day10.Part2(topoMap))
 	fmt.Println()
 }

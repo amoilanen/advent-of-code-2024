@@ -149,3 +149,59 @@ func Part1(topoMap TopoMap) int {
 
 	return totalScore
 }
+
+// CountPaths calculates the number of distinct hiking trails from a position
+// to any height-9 position using dynamic programming with memoization
+// Returns: number of distinct paths from pos to any height-9 position
+func (tm TopoMap) CountPaths(pos Position, memo map[Position]int) int {
+	// Check if already computed
+	if count, exists := memo[pos]; exists {
+		return count
+	}
+
+	currentHeight := tm.Grid[pos.Row][pos.Col]
+
+	// Base case: reached height 9 - this is one complete path
+	if currentHeight == 9 {
+		memo[pos] = 1
+		return 1
+	}
+
+	// Recursive case: sum paths from all valid continuations
+	totalPaths := 0
+	for _, neighbor := range tm.GetTrailContinuations(pos, currentHeight) {
+		totalPaths += tm.CountPaths(neighbor, memo)
+	}
+
+	memo[pos] = totalPaths
+	return totalPaths
+}
+
+// RateTrailhead calculates the rating for a single trailhead
+// Rating = number of distinct hiking trails that begin at this trailhead
+func (tm TopoMap) RateTrailhead(start Position, memo map[Position]int) int {
+	return tm.CountPaths(start, memo)
+}
+
+// Part2 calculates the sum of ratings for all trailheads
+// Algorithm:
+// 1. Find all trailheads (height 0 positions)
+// 2. For each trailhead, count distinct paths to any height-9 using DP
+// 3. Sum the ratings
+//
+// Time complexity: O(R × C) - each position computed at most once via memoization
+// Space complexity: O(R × C) for memoization map
+func Part2(topoMap TopoMap) int {
+	trailheads := topoMap.FindTrailheads()
+	totalRating := 0
+
+	// Shared memoization map across all trailheads for efficiency
+	memo := make(map[Position]int)
+
+	for _, trailhead := range trailheads {
+		rating := topoMap.RateTrailhead(trailhead, memo)
+		totalRating += rating
+	}
+
+	return totalRating
+}
