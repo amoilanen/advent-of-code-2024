@@ -13,6 +13,7 @@ import (
 	"github.com/amoilanen/advent-of-code-2024/internal/days/day07"
 	"github.com/amoilanen/advent-of-code-2024/internal/days/day08"
 	"github.com/amoilanen/advent-of-code-2024/internal/days/day09"
+	"github.com/amoilanen/advent-of-code-2024/internal/days/day10"
 )
 
 func main() {
@@ -37,6 +38,7 @@ func runAllDays() {
 	runDay07()
 	runDay08()
 	runDay09()
+	runDay10()
 }
 
 func runSpecificDay(day string) {
@@ -59,6 +61,8 @@ func runSpecificDay(day string) {
 		runDay08()
 	case "9", "day09", "day9":
 		runDay09()
+	case "10", "day10":
+		runDay10()
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown day: %s\n", day)
 		fmt.Fprintln(os.Stderr, "Usage: aoc2024 [day]")
@@ -145,5 +149,13 @@ func runDay09() {
 	diskMap := day09.Parse(input)
 	fmt.Printf("  Part 1: %d\n", day09.Part1(diskMap))
 	fmt.Printf("  Part 2: %d\n", day09.Part2(diskMap))
+	fmt.Println()
+}
+
+func runDay10() {
+	fmt.Println("Day 10:")
+	input := day10.DayInput
+	topoMap := day10.Parse(input)
+	fmt.Printf("  Part 1: %d\n", day10.Part1(topoMap))
 	fmt.Println()
 }
