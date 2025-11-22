@@ -14,6 +14,7 @@ import (
 	"github.com/amoilanen/advent-of-code-2024/internal/days/day08"
 	"github.com/amoilanen/advent-of-code-2024/internal/days/day09"
 	"github.com/amoilanen/advent-of-code-2024/internal/days/day10"
+	"github.com/amoilanen/advent-of-code-2024/internal/days/day11"
 )
 
 func main() {
@@ -39,6 +40,7 @@ func runAllDays() {
 	runDay08()
 	runDay09()
 	runDay10()
+	runDay11()
 }
 
 func runSpecificDay(day string) {
@@ -63,6 +65,8 @@ func runSpecificDay(day string) {
 		runDay09()
 	case "10", "day10":
 		runDay10()
+	case "11", "day11":
+		runDay11()
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown day: %s\n", day)
 		fmt.Fprintln(os.Stderr, "Usage: aoc2024 [day]")
@@ -158,5 +162,14 @@ func runDay10() {
 	topoMap := day10.Parse(input)
 	fmt.Printf("  Part 1: %d\n", day10.Part1(topoMap))
 	fmt.Printf("  Part 2: %d\n", day10.Part2(topoMap))
+	fmt.Println()
+}
+
+func runDay11() {
+	fmt.Println("Day 11:")
+	input := day11.DayInput
+	stones := day11.Parse(input)
+	fmt.Printf("  Part 1: %d\n", day11.Part1(stones))
+	fmt.Printf("  Part 2: %d\n", day11.Part2(stones))
 	fmt.Println()
 }
