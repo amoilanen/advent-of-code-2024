@@ -63,38 +63,44 @@ func transformStone(value int) []int {
 	return []int{value * 2024}
 }
 
-// simulateBlinks simulates the stone transformations for a given number of blinks
-// Uses a frequency map for efficiency: stone_value -> count
-func simulateBlinks(stones []int, blinks int) int {
-	// Create initial frequency map
+func initialCounts(stones []int) map[int]int {
 	stoneCount := make(map[int]int)
 	for _, stone := range stones {
 		stoneCount[stone]++
 	}
+	return stoneCount
+}
 
-	// Simulate each blink
-	for i := 0; i < blinks; i++ {
-		newStoneCount := make(map[int]int)
+func nextCounts(currentCounts map[int]int) map[int]int {
+	newStoneCount := make(map[int]int)
 
-		// Process each unique stone value
-		for value, count := range stoneCount {
-			// Transform the stone and add results to new map
-			results := transformStone(value)
-			for _, result := range results {
-				newStoneCount[result] += count
-			}
+	// Process each unique stone value
+	for value, count := range currentCounts {
+		// Transform the stone and add results to new map
+		results := transformStone(value)
+		for _, result := range results {
+			newStoneCount[result] += count
 		}
-
-		stoneCount = newStoneCount
 	}
+	return newStoneCount
+}
 
-	// Count total stones
+func countStones(currentCounts map[int]int) int {
 	total := 0
-	for _, count := range stoneCount {
+	for _, count := range currentCounts {
 		total += count
 	}
-
 	return total
+}
+
+// simulateBlinks simulates the stone transformations for a given number of blinks
+// Uses a frequency map for efficiency: stone_value -> count
+func simulateBlinks(stones []int, blinks int) int {
+	stoneCount := initialCounts(stones)
+	for i := 0; i < blinks; i++ {
+		stoneCount = nextCounts(stoneCount)
+	}
+	return countStones(stoneCount)
 }
 
 // Part1 solves part 1: count stones after 25 blinks
