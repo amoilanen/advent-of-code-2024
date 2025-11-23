@@ -38,13 +38,11 @@ func Parse(input string) Grid {
 	}
 }
 
-// exploreRegion uses BFS to find all cells in a region and calculate area/perimeter
-// Returns area and perimeter for the region starting at (startR, startC)
-func exploreRegion(grid Grid, visited [][]bool, startRow, startColumn int) (int, int) {
+// findRegion uses BFS to find all cells in a connected region
+// Returns a set of all cells in the region starting at (startRow, startColumn)
+func findRegion(grid Grid, visited [][]bool, startRow, startColumn int) map[[2]int]bool {
 	plantType := grid.Cells[startRow][startColumn]
-
-	area := 0
-	perimeter := 0
+	regionCells := make(map[[2]int]bool)
 
 	queue := [][2]int{{startRow, startColumn}}
 	visited[startRow][startColumn] = true
@@ -56,24 +54,49 @@ func exploreRegion(grid Grid, visited [][]bool, startRow, startColumn int) (int,
 		queue = queue[1:]
 		currentRow, currentColumn := current[0], current[1]
 
-		area++
+		regionCells[[2]int{currentRow, currentColumn}] = true
 
-		// Check each of the 4 sides
+		// Explore neighbors
 		for _, dir := range directions {
 			neighborRow, neighborColumn := currentRow+dir[0], currentColumn+dir[1]
 
-			// Edge contributes to perimeter if out of bounds or different plant type
-			if neighborRow < 0 || neighborRow >= grid.Rows || neighborColumn < 0 || neighborColumn >= grid.Cols || grid.Cells[neighborRow][neighborColumn] != plantType {
-				perimeter++
-			} else if !visited[neighborRow][neighborColumn] {
-				// Same plant type and unvisited - add to region
+			if neighborRow >= 0 && neighborRow < grid.Rows &&
+				neighborColumn >= 0 && neighborColumn < grid.Cols &&
+				grid.Cells[neighborRow][neighborColumn] == plantType &&
+				!visited[neighborRow][neighborColumn] {
 				visited[neighborRow][neighborColumn] = true
 				queue = append(queue, [2]int{neighborRow, neighborColumn})
 			}
 		}
 	}
 
-	return area, perimeter
+	return regionCells
+}
+
+// calculatePerimeter calculates the perimeter of a region
+// Perimeter is the count of edges that border cells outside the region
+func calculatePerimeter(grid Grid, regionCells map[[2]int]bool) int {
+	perimeter := 0
+	directions := [][2]int{{-1, 0}, {1, 0}, {0, -1}, {0, 1}}
+
+	for cell := range regionCells {
+		currentRow, currentColumn := cell[0], cell[1]
+		plantType := grid.Cells[currentRow][currentColumn]
+
+		// Check each of the 4 sides
+		for _, dir := range directions {
+			neighborRow, neighborColumn := currentRow+dir[0], currentColumn+dir[1]
+
+			// Edge contributes to perimeter if out of bounds or different plant type
+			if neighborRow < 0 || neighborRow >= grid.Rows ||
+				neighborColumn < 0 || neighborColumn >= grid.Cols ||
+				grid.Cells[neighborRow][neighborColumn] != plantType {
+				perimeter++
+			}
+		}
+	}
+
+	return perimeter
 }
 
 // Part1 calculates the total fencing cost for all regions
@@ -97,7 +120,9 @@ func Part1(grid Grid) int {
 	for r := 0; r < grid.Rows; r++ {
 		for c := 0; c < grid.Cols; c++ {
 			if !visited[r][c] {
-				area, perimeter := exploreRegion(grid, visited, r, c)
+				regionCells := findRegion(grid, visited, r, c)
+				area := len(regionCells)
+				perimeter := calculatePerimeter(grid, regionCells)
 				totalPrice += area * perimeter
 			}
 		}
@@ -106,7 +131,101 @@ func Part1(grid Grid) int {
 	return totalPrice
 }
 
-// Part2 placeholder for part 2
+// countCorners counts the number of corners in a region
+// Key insight: number of sides = number of corners in any closed polygon
+//
+// For each cell, we check 4 possible corners (NW, NE, SW, SE):
+// - Outer corner: both orthogonal neighbors are NOT in region
+// - Inner corner: both orthogonal neighbors ARE in region, but diagonal is NOT
+func countCorners(regionCells map[[2]int]bool) int {
+	corners := 0
+
+	for cell := range regionCells {
+		currentRow, currentColumn := cell[0], cell[1]
+
+		// Check all 4 corners of this cell
+		// NW corner: check top, left, and top-left diagonal
+		top := regionCells[[2]int{currentRow - 1, currentColumn}]
+		left := regionCells[[2]int{currentRow, currentColumn - 1}]
+		topLeft := regionCells[[2]int{currentRow - 1, currentColumn - 1}]
+
+		// Outer corner: both adjacent cells are outside
+		if !top && !left {
+			corners++
+		}
+		// Inner corner: both adjacent cells are inside, but diagonal is outside
+		if top && left && !topLeft {
+			corners++
+		}
+
+		// NE corner: check top, right, and top-right diagonal
+		right := regionCells[[2]int{currentRow, currentColumn + 1}]
+		topRight := regionCells[[2]int{currentRow - 1, currentColumn + 1}]
+
+		if !top && !right {
+			corners++
+		}
+		if top && right && !topRight {
+			corners++
+		}
+
+		// SW corner: check bottom, left, and bottom-left diagonal
+		bottom := regionCells[[2]int{currentRow + 1, currentColumn}]
+		bottomLeft := regionCells[[2]int{currentRow + 1, currentColumn - 1}]
+
+		if !bottom && !left {
+			corners++
+		}
+		if bottom && left && !bottomLeft {
+			corners++
+		}
+
+		// SE corner: check bottom, right, and bottom-right diagonal
+		bottomRight := regionCells[[2]int{currentRow + 1, currentColumn + 1}]
+
+		if !bottom && !right {
+			corners++
+		}
+		if bottom && right && !bottomRight {
+			corners++
+		}
+	}
+
+	return corners
+}
+
+// Part2 calculates the total fencing cost using bulk discount
+// Algorithm:
+// 1. Use flood fill (BFS) to identify connected regions of same plant type
+// 2. For each region, calculate area and number of sides (corners)
+// 3. Key insight: In any closed polygon, sides = corners
+// 4. Count corners by checking each cell's 4 corner positions:
+//   - Outer corners: both orthogonal neighbors outside region
+//   - Inner corners: both orthogonal neighbors inside, diagonal outside
+//
+// 5. Price per region = area * sides
+//
+// Time complexity: O(rows * cols) - each cell visited once
+// Space complexity: O(rows * cols) - for visited tracking and region storage
 func Part2(grid Grid) int {
-	return 0
+	visited := make([][]bool, grid.Rows)
+	for i := range visited {
+		visited[i] = make([]bool, grid.Cols)
+	}
+
+	totalPrice := 0
+
+	// Find all regions using flood fill
+	for r := 0; r < grid.Rows; r++ {
+		for c := 0; c < grid.Cols; c++ {
+			if !visited[r][c] {
+				regionCells := findRegion(grid, visited, r, c)
+				area := len(regionCells)
+				sides := countCorners(regionCells)
+				totalPrice += area * sides
+			}
+		}
+	}
+
+	return totalPrice
 }
