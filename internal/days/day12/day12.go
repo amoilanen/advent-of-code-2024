@@ -40,35 +40,35 @@ func Parse(input string) Grid {
 
 // exploreRegion uses BFS to find all cells in a region and calculate area/perimeter
 // Returns area and perimeter for the region starting at (startR, startC)
-func exploreRegion(grid Grid, visited [][]bool, startR, startC int) (int, int) {
-	plantType := grid.Cells[startR][startC]
+func exploreRegion(grid Grid, visited [][]bool, startRow, startColumn int) (int, int) {
+	plantType := grid.Cells[startRow][startColumn]
 
 	area := 0
 	perimeter := 0
 
-	queue := [][2]int{{startR, startC}}
-	visited[startR][startC] = true
+	queue := [][2]int{{startRow, startColumn}}
+	visited[startRow][startColumn] = true
 
 	directions := [][2]int{{-1, 0}, {1, 0}, {0, -1}, {0, 1}}
 
 	for len(queue) > 0 {
-		curr := queue[0]
+		current := queue[0]
 		queue = queue[1:]
-		r, c := curr[0], curr[1]
+		currentRow, currentColumn := current[0], current[1]
 
 		area++
 
 		// Check each of the 4 sides
 		for _, dir := range directions {
-			nr, nc := r+dir[0], c+dir[1]
+			neighborRow, neighborColumn := currentRow+dir[0], currentColumn+dir[1]
 
 			// Edge contributes to perimeter if out of bounds or different plant type
-			if nr < 0 || nr >= grid.Rows || nc < 0 || nc >= grid.Cols || grid.Cells[nr][nc] != plantType {
+			if neighborRow < 0 || neighborRow >= grid.Rows || neighborColumn < 0 || neighborColumn >= grid.Cols || grid.Cells[neighborRow][neighborColumn] != plantType {
 				perimeter++
-			} else if !visited[nr][nc] {
+			} else if !visited[neighborRow][neighborColumn] {
 				// Same plant type and unvisited - add to region
-				visited[nr][nc] = true
-				queue = append(queue, [2]int{nr, nc})
+				visited[neighborRow][neighborColumn] = true
+				queue = append(queue, [2]int{neighborRow, neighborColumn})
 			}
 		}
 	}
