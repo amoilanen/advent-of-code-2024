@@ -131,6 +131,26 @@ func Part1(grid Grid) int {
 	return totalPrice
 }
 
+// isCorner checks if a corner exists at a cell's corner position
+// Returns true if either an outer or inner corner is detected
+func isCorner(regionCells map[[2]int]bool, row, col, dRow1, dCol1, dRow2, dCol2 int) bool {
+	neighbor1 := regionCells[[2]int{row + dRow1, col + dCol1}]
+	neighbor2 := regionCells[[2]int{row + dRow2, col + dCol2}]
+	diagonal := regionCells[[2]int{row + dRow1 + dRow2, col + dCol1 + dCol2}]
+
+	// Outer corner: both orthogonal neighbors are outside region
+	if !neighbor1 && !neighbor2 {
+		return true
+	}
+
+	// Inner corner: both orthogonal neighbors are inside, but diagonal is outside
+	if neighbor1 && neighbor2 && !diagonal {
+		return true
+	}
+
+	return false
+}
+
 // countCorners counts the number of corners in a region
 // Key insight: number of sides = number of corners in any closed polygon
 //
@@ -138,60 +158,29 @@ func Part1(grid Grid) int {
 // - Outer corner: both orthogonal neighbors are NOT in region
 // - Inner corner: both orthogonal neighbors ARE in region, but diagonal is NOT
 func countCorners(regionCells map[[2]int]bool) int {
-	corners := 0
+	// Define the 4 corner configurations: [vertical offset, horizontal offset]
+	// Each corner is defined by two orthogonal directions
+	cornerConfigs := [][4]int{
+		{-1, 0, 0, -1}, // NW: top, left
+		{-1, 0, 0, 1},  // NE: top, right
+		{1, 0, 0, -1},  // SW: bottom, left
+		{1, 0, 0, 1},   // SE: bottom, right
+	}
+
+	totalCorners := 0
 
 	for cell := range regionCells {
-		currentRow, currentColumn := cell[0], cell[1]
+		row, col := cell[0], cell[1]
 
 		// Check all 4 corners of this cell
-		// NW corner: check top, left, and top-left diagonal
-		top := regionCells[[2]int{currentRow - 1, currentColumn}]
-		left := regionCells[[2]int{currentRow, currentColumn - 1}]
-		topLeft := regionCells[[2]int{currentRow - 1, currentColumn - 1}]
-
-		// Outer corner: both adjacent cells are outside
-		if !top && !left {
-			corners++
-		}
-		// Inner corner: both adjacent cells are inside, but diagonal is outside
-		if top && left && !topLeft {
-			corners++
-		}
-
-		// NE corner: check top, right, and top-right diagonal
-		right := regionCells[[2]int{currentRow, currentColumn + 1}]
-		topRight := regionCells[[2]int{currentRow - 1, currentColumn + 1}]
-
-		if !top && !right {
-			corners++
-		}
-		if top && right && !topRight {
-			corners++
-		}
-
-		// SW corner: check bottom, left, and bottom-left diagonal
-		bottom := regionCells[[2]int{currentRow + 1, currentColumn}]
-		bottomLeft := regionCells[[2]int{currentRow + 1, currentColumn - 1}]
-
-		if !bottom && !left {
-			corners++
-		}
-		if bottom && left && !bottomLeft {
-			corners++
-		}
-
-		// SE corner: check bottom, right, and bottom-right diagonal
-		bottomRight := regionCells[[2]int{currentRow + 1, currentColumn + 1}]
-
-		if !bottom && !right {
-			corners++
-		}
-		if bottom && right && !bottomRight {
-			corners++
+		for _, config := range cornerConfigs {
+			if isCorner(regionCells, row, col, config[0], config[1], config[2], config[3]) {
+				totalCorners++
+			}
 		}
 	}
 
-	return corners
+	return totalCorners
 }
 
 // Part2 calculates the total fencing cost using bulk discount
