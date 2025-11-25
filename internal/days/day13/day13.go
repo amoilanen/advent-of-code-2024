@@ -100,16 +100,19 @@ func Parse(input string) []Machine {
 // SolveMachineWithConstraints finds the optimal solution using Cramer's rule
 // Algorithm:
 // We need to solve the system of linear equations:
-//   a * A_x + b * B_x = Prize_x
-//   a * A_y + b * B_y = Prize_y
+//
+//	a * A_x + b * B_x = Prize_x
+//	a * A_y + b * B_y = Prize_y
 //
 // Using Cramer's rule:
-//   D = A_x * B_y - A_y * B_x  (determinant)
-//   a = (Prize_x * B_y - Prize_y * B_x) / D
-//   b = (A_x * Prize_y - A_y * Prize_x) / D
+//
+//	D = A_x * B_y - A_y * B_x  (determinant)
+//	a = (Prize_x * B_y - Prize_y * B_x) / D
+//	b = (A_x * Prize_y - A_y * Prize_x) / D
 //
 // Parameters:
-//   maxPresses: Maximum button presses allowed (-1 for no limit)
+//
+//	maxPresses: Maximum button presses allowed (-1 for no limit)
 //
 // Time complexity: O(1)
 // Space complexity: O(1)
