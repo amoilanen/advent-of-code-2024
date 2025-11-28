@@ -18,6 +18,7 @@ import (
 	"github.com/amoilanen/advent-of-code-2024/internal/days/day12"
 	"github.com/amoilanen/advent-of-code-2024/internal/days/day13"
 	"github.com/amoilanen/advent-of-code-2024/internal/days/day14"
+	"github.com/amoilanen/advent-of-code-2024/internal/days/day15"
 )
 
 func main() {
@@ -47,6 +48,7 @@ func runAllDays() {
 	runDay12()
 	runDay13()
 	runDay14()
+	runDay15()
 }
 
 func runSpecificDay(day string) {
@@ -79,6 +81,8 @@ func runSpecificDay(day string) {
 		runDay13()
 	case "14", "day14":
 		runDay14()
+	case "15", "day15":
+		runDay15()
 	default:
 		fmt.Fprintf(os.Stderr, "Unknown day: %s\n", day)
 		fmt.Fprintln(os.Stderr, "Usage: aoc2024 [day]")
@@ -210,5 +214,12 @@ func runDay14() {
 	robots := day14.Parse(input)
 	fmt.Printf("  Part 1: %d\n", day14.Part1(robots, 101, 103))
 	fmt.Printf("  Part 2: %d\n", day14.Part2(robots, 101, 103))
+	fmt.Println()
+}
+
+func runDay15() {
+	fmt.Println("Day 15:")
+	input := day15.Input
+	fmt.Printf("  Part 1: %d\n", day15.Part1(input))
 	fmt.Println()
 }
