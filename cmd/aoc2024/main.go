@@ -221,5 +221,6 @@ func runDay15() {
 	fmt.Println("Day 15:")
 	input := day15.Input
 	fmt.Printf("  Part 1: %d\n", day15.Part1(input))
+	fmt.Printf("  Part 2: %d\n", day15.Part2(input))
 	fmt.Println()
 }

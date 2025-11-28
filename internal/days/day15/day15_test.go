@@ -231,3 +231,167 @@ func TestPart1_LargeExample(t *testing.T) {
 		t.Errorf("expected %d, got %d", expected, result)
 	}
 }
+
+const SmallExamplePart2 = `#######
+#...#.#
+#.....#
+#..OO@#
+#..O..#
+#.....#
+#######
+
+<vv<<^^<<^^`
+
+func TestScaleWarehouse(t *testing.T) {
+	warehouse, _ := Parse(SmallExample)
+	scaled := ScaleWarehouse(warehouse)
+
+	// Check dimensions
+	if scaled.Width != warehouse.Width*2 {
+		t.Errorf("expected width %d, got %d", warehouse.Width*2, scaled.Width)
+	}
+	if scaled.Height != warehouse.Height {
+		t.Errorf("expected height %d, got %d", warehouse.Height, scaled.Height)
+	}
+
+	// Check robot position is scaled correctly
+	expectedRobotCol := warehouse.Robot.Col * 2
+	if scaled.Robot.Col != expectedRobotCol {
+		t.Errorf("expected robot col %d, got %d", expectedRobotCol, scaled.Robot.Col)
+	}
+
+	// Check that a wall is doubled
+	if warehouse.Grid[0][0] == '#' {
+		if scaled.Grid[0][0] != '#' || scaled.Grid[0][1] != '#' {
+			t.Errorf("expected wall to be doubled")
+		}
+	}
+
+	// Check that a box is converted to []
+	for row := 0; row < warehouse.Height; row++ {
+		for col := 0; col < warehouse.Width; col++ {
+			if warehouse.Grid[row][col] == 'O' {
+				scaledCol := col * 2
+				if scaled.Grid[row][scaledCol] != '[' || scaled.Grid[row][scaledCol+1] != ']' {
+					t.Errorf("expected box at (%d,%d) to become [] at (%d,%d)", row, col, row, scaledCol)
+				}
+			}
+		}
+	}
+}
+
+func TestSimulateMoveWide_HorizontalPush(t *testing.T) {
+	input := `####
+#@O.#
+####
+
+>`
+
+	warehouse, moves := Parse(input)
+	warehouse = ScaleWarehouse(warehouse)
+	warehouse.SimulateMoveWide(moves[0])
+
+	// After scaling: ##########  Robot @ (1,2), Box at (1,4-5), moves right
+	// After move: Robot should be at (1,3), box at (1,4-5)
+	if warehouse.Robot.Row != 1 || warehouse.Robot.Col != 3 {
+		t.Errorf("expected robot at (1, 3), got (%d, %d)", warehouse.Robot.Row, warehouse.Robot.Col)
+	}
+
+	// Check box moved
+	if warehouse.Grid[1][4] != '[' || warehouse.Grid[1][5] != ']' {
+		t.Errorf("expected box at (1, 4-5), got '%c%c'", warehouse.Grid[1][4], warehouse.Grid[1][5])
+	}
+}
+
+func TestSimulateMoveWide_VerticalPushAligned(t *testing.T) {
+	input := `####
+#..#
+#.O#
+#.O#
+#.@#
+####
+
+^`
+
+	warehouse, moves := Parse(input)
+	warehouse = ScaleWarehouse(warehouse)
+	warehouse.SimulateMoveWide(moves[0])
+
+	// After scaling robot is at (4,4), boxes at (2,4-5) and (3,4-5)
+	// After move up: robot at (3,4), boxes at (1,4-5) and (2,4-5)
+	if warehouse.Robot.Row != 3 || warehouse.Robot.Col != 4 {
+		t.Errorf("expected robot at (3, 4), got (%d, %d)", warehouse.Robot.Row, warehouse.Robot.Col)
+	}
+
+	// Boxes should move up
+	if warehouse.Grid[1][4] != '[' || warehouse.Grid[1][5] != ']' {
+		t.Errorf("expected top box at (1, 4-5), got '%c%c'", warehouse.Grid[1][4], warehouse.Grid[1][5])
+	}
+	if warehouse.Grid[2][4] != '[' || warehouse.Grid[2][5] != ']' {
+		t.Errorf("expected second box at (2, 4-5), got '%c%c'", warehouse.Grid[2][4], warehouse.Grid[2][5])
+	}
+}
+
+func TestSimulateMoveWide_VerticalPushOffset(t *testing.T) {
+	// Test when boxes are offset vertically
+	// Original: Box at (2,2) and (3,1), robot at (4,1)
+	// Scaled: Box at (2,4-5) and (3,2-3), robot at (4,2)
+	// Robot pushes left edge of box at (3,2-3), which doesn't overlap with box at (2,4-5)
+	input := `#####
+#...#
+#.O.#
+#O..#
+#@..#
+#####
+
+^`
+
+	warehouse, moves := Parse(input)
+	warehouse = ScaleWarehouse(warehouse)
+	warehouse.SimulateMoveWide(moves[0])
+
+	// Robot should move up from (4,2) to (3,2)
+	if warehouse.Robot.Row != 3 || warehouse.Robot.Col != 2 {
+		t.Errorf("expected robot at (3, 2), got (%d, %d)", warehouse.Robot.Row, warehouse.Robot.Col)
+	}
+
+	// Bottom box should move up from (3,2-3) to (2,2-3)
+	if warehouse.Grid[2][2] != '[' || warehouse.Grid[2][3] != ']' {
+		t.Errorf("expected bottom box at (2, 2-3), got '%c%c'", warehouse.Grid[2][2], warehouse.Grid[2][3])
+	}
+
+	// Top box should NOT move (it doesn't overlap with the pushed box)
+	if warehouse.Grid[2][4] != '[' || warehouse.Grid[2][5] != ']' {
+		t.Errorf("expected top box to stay at (2, 4-5), got '%c%c'", warehouse.Grid[2][4], warehouse.Grid[2][5])
+	}
+}
+
+func TestSimulateMoveWide_VerticalBlocked(t *testing.T) {
+	input := `####
+#.##
+#.O#
+#.@#
+####
+
+^`
+
+	warehouse, moves := Parse(input)
+	warehouse = ScaleWarehouse(warehouse)
+	initialRobot := warehouse.Robot
+
+	warehouse.SimulateMoveWide(moves[0])
+
+	// Robot should not move (blocked by wall above box)
+	if warehouse.Robot.Row != initialRobot.Row || warehouse.Robot.Col != initialRobot.Col {
+		t.Errorf("expected robot to stay at (%d, %d), got (%d, %d)",
+			initialRobot.Row, initialRobot.Col, warehouse.Robot.Row, warehouse.Robot.Col)
+	}
+}
+
+func TestPart2_LargeExample(t *testing.T) {
+	result := Part2(LargeExample)
+	expected := 9021
+	if result != expected {
+		t.Errorf("expected %d, got %d", expected, result)
+	}
+}
